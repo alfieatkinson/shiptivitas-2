@@ -127,7 +127,22 @@ app.put('/api/v1/clients/:id', (req, res) => {
 
   /* ---------- Update code below ----------*/
 
+  const statusValid = status && ['backlog', 'in-progress', 'complete'].includes(status);
+  if (!statusValid) {
+    return res.status(400).send({
+      'message': 'Invalid status provided.',
+      'long_message': 'Status can only be one of the following: [backlog | in-progress | complete].',
+    });
+  }
 
+  const priorityValid = validatePriority(priority);
+  if (!priorityValid.valid) {
+    return res.status(400).send(priorityValid.messageObj);
+  }
+
+  // Update the client in the database
+  const stmt = db.prepare('UPDATE clients SET status = ?, priority = ? WHERE id = ?');
+  stmt.run(status, priority, id);
 
   return res.status(200).send(clients);
 });
